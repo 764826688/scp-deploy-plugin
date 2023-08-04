@@ -1,1 +1,0 @@
-/Users/xingzhiyan/git/test/webpack-demo/plugins/deploy.scp.js
