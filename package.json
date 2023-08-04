@@ -1,14 +1,10 @@
 {
   "name": "scp-deploy-plugin",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "deploy by scp",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "node script/node replace-symlinks.js",
-    "postpublish": "node script/restore-symlinks.js",
-    "test1": "npm run prepublishOnly && npm run postpublish",
-    "test2": "node src/a.js && echo 2"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "respository": {
     "type": "git",
