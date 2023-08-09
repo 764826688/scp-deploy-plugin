@@ -1,5 +1,5 @@
 # Overview 
-deploy by scp 
+deploy by scp command
 
 After executing the 'npm run build' command, automatically deploy.
 
