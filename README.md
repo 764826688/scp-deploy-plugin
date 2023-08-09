@@ -1,6 +1,8 @@
 # Overview 
 deploy by scp 
 
+After executing the 'npm run build' command, automatically deploy.
+
 # Installation
 ```
 npm i scp-deploy-plugin

@@ -51,7 +51,7 @@ class ScpDeployPlugin {
     const { host, port, username, privateKey,password,projectPath, backupProjectName } = this.options;
     let hash = '';
     compiler.hooks.done.tap("deploy_scp", (stats) => {
-      done(`结束打包,当前目录：${__dirname}`);
+      done(`Package completed,current directory is：${__dirname}`);
       hash = stats.hash;
       const outDir = compiler.options.output.path;
       
@@ -70,7 +70,7 @@ class ScpDeployPlugin {
             else 
               ls $(dirname ${projectPath}) || mkdir -p "${projectPath}"
             fi`, 
-            output: '', msg: '删除前' },
+            output: '', msg: 'Before deletion:' },
           { name: `destPath=$(dirname ${projectPath})/.${backupProjectName} 
             if [ -d "$destPath" ]; then
              rm -rf $destPath && mv ${projectPath} $destPath
@@ -78,15 +78,15 @@ class ScpDeployPlugin {
               if [ -d "${projectPath}" ]; then
                 mv ${projectPath} $destPath
               else
-                echo '初始化无需新建目录'
+                echo 'Initialization does not require creating a new directory:'
               fi;
-            fi;`, msg: '删除并备份'},
+            fi;`, msg: 'Delete and backup:'},
           // { name: `rm -rf ${projectPath}`, output: ''},
-          { name: `cd ${projectPath} || ls $(dirname ${projectPath})`, output: '', msg: '删除后'}
+          { name: `cd ${projectPath} || ls $(dirname ${projectPath})`, output: '', msg: 'After deletion'}
         ]
       
         client.on("ready", () => {
-          done('SSH建立链接')
+          done('Establishing SSH connection')
           try {
             executeCommand();
           } catch (error) {
@@ -94,22 +94,22 @@ class ScpDeployPlugin {
           }
         });
 
-        // 回滚上一次
+        // rollback
         function revert() {
           client.exec(`mv $(dirname ${projectPath})/.${backupProjectName} ${projectPath}`, (err, stream) => {
             if (err) {
-              error(`回滚失败:${err}`);
+              error(`Rollback failed:${err}`);
               throw err;
             }
             stream.on('exit', (code) => {
-              done('回滚成功');
+              done('Rollback successed');
             })
           })
         }
 
         function executeCommand () {
           if (commands.length == 0) {
-           info('命令执行完毕');
+           info('Command execution completed');
            return;
           }
           const command = commands.shift();
@@ -124,89 +124,23 @@ class ScpDeployPlugin {
             })
             stream.on('exit', (code) => {
               if (!commands.length) {
-                done('命令执行完毕,删除远程目录成功');
-                info('开始文件上传...');
+                done('Command execution completed, remote directory deletion successful');
+                info('Starting file upload...');
                 try {
                   let command = `scp -r ${outDir} ${username}@${host}:${projectPath}`;
                   execSync(command);
-                  done('文件夹上传成功！');
+                  done('Folder upload successful!');
                   client.end();
                 } catch (err) {
-                  error('文件夹上传失败：', err);
+                  error('Client error occurred:', err);
                   client.end();
                   throw(err);
                 }
-                // client.sftp((err,sftp) => {
-                //   if (err) {
-                //     throw err;
-                //   }
-                //   function uploadFile(sourcePath,remotePath) {
-                //     if (!sourcePath || !remotePath) return Promise.reject();
-                //     return new Promise((resolve,reject) => {
-                //       // sftp.fastPut(sourcePath,remotePath,(err) => {
-                //       //   if (err) {
-                //       //     console.log(err)
-                //       //     return reject(err);
-                //       //   }
-                //       //   resolve();
-                //       // });
-                //       const readStream = fs.createReadStream(sourcePath);
-                //       const writeStream = sftp.createWriteStream(remotePath);
-                //       readStream.pipe(writeStream);
-                //       writeStream.on('close',() => resolve());
-                //       writeStream.on('error',(err) => reject(`文件上传失败${err}`))
-                //     })
-                //   }
-
-                //   function mkdir(path) {
-                //     if (!path) return Promise.reject();
-                //     return new Promise((resolve,reject) => {
-                //       sftp.mkdir(path,err => {
-                //         if (err) {
-                //           return reject(err);  
-                //         }
-                //         resolve();
-                //       })
-                //     })
-                //   }
-                  
-                //  async function uploadDir(_localpath,_remotePath) {
-                //     // 非文件夹禁止上传
-                //     if (!checkFolderExists(_localpath)) return;
-                //     const files = fs.readdirSync(_localpath);
-                //     if (!files.length) return;
-                //     for (const file of files) {
-                //       const localFilePath = path.join(_localpath, file);
-                //       const stats = fs.statSync(localFilePath);
-                //       if (stats.isFile()) {
-                //         // info(`${localFilePath},${_remotePath}`)
-                //         await uploadFile(localFilePath,_remotePath)
-                //         info(`upload ${file} successed`);
-                //       } else if (stats.isDirectory()) {
-                //         const remoteFilePath = path.join(_remotePath,file);
-                //         await mkdir(remoteFilePath);
-                //         uploadDir(localFilePath,remoteFilePath);
-                //       }
-                //     }
-                //   }
-                //   try {
-                //     mkdir(`${projectPath}`).then(() => {
-                //       uploadDir(outDir, `${projectPath}`).catch(err => error(err))
-                //     }).catch(err => {
-                //       error(err)
-                //     })
-                //     // done('文件上传成功');
-                //   } catch (err) {
-                //     error(`上传文件发生错误：${err}`)
-                //   }
-                // })
-                // client.end();
                 return;
               }
               if (code === 0) {
                 executeCommand() 
               } else {
-                // error(`命令执行失败，即将退出...,${chalk.red(err)}`);
                 throw(`${command.name}: ${err}`)
               }
             })
@@ -215,14 +149,14 @@ class ScpDeployPlugin {
 
         
         client.on('error',err => {
-          error(`客户端发生错误：${err}`);
+          error(`Client error occurred:${err}`);
         })
         client.on('end',() => {
-          warn(`当前hash是:${hash.slice(0,8)}`)
-          info('SSH客户端关闭');
+          warn(`Current hash is:${hash.slice(0,8)}`)
+          info('SSH client closed');
         })
         client.on('timeout', () => {
-          info('链接超时');
+          info('Connection timeout');
         })
       }
     });
